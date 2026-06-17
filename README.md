@@ -39,7 +39,8 @@ Phase 0 (底層異動追蹤) 的完整技術決策與稽核庫 Schema 定義見
 - **Python 3.12+ / FastAPI**
 - **REST (OpenAPI)** 為主對外介面 + **唯讀 GraphQL** (Strawberry) 供複雜查詢
 - **SQLAlchemy** + `asyncpg` (PostgreSQL) 與 `aioodbc` / `pyodbc` (MSSQL，唯讀瀏覽)
-- AD / LDAP 整合：`python-ldap`
+- AD / LDAP 整合：`ldap3` (SIMPLE bind)；Windows SSO 經 IIS Windows 驗證
+- 部署：Windows IIS + HttpPlatformHandler + Waitress (FastAPI 經 `a2wsgi` 橋接)
 - 憑證：一律經 **secret manager**，禁止明文
 
 ### Frontend
@@ -104,13 +105,19 @@ Phase 0 (底層異動追蹤) 的完整技術決策與稽核庫 Schema 定義見
 argus-db/
 ├── README.md                      # 本檔 — 最高指導原則
 ├── CLAUDE.md                      # 程式碼行為準則
+├── app/                           # 平台 API 服務 (FastAPI)
+│   ├── argus_api/                 #   應用程式 (auth / AD 整合 / 路由)
+│   ├── wsgi.py  web.config        #   IIS + Waitress 部署進入點與設定
+│   ├── requirements.txt  .env.example
+│   └── tests/                     #   純函式單元測試
 ├── deploy/                        # Phase 0 採集管線部署資產
 │   ├── docker-compose.yml         #   postgres + kafka + connect
 │   ├── .env.example               #   設定範例 (複製為 .env)
 │   ├── audit-store/01_schema.sql  #   稽核庫 schema (初始化自動套用)
 │   └── connectors/                #   Debezium 連接器設定 (mssql / postgres)
 └── docs/
-    ├── deployment.md              # Phase 0 部署說明
+    ├── deployment.md              # Phase 0 採集管線部署說明 (容器)
+    ├── deployment-iis.md          # 平台 API 部署說明 (Windows IIS + AD)
     ├── architecture/
     │   └── phase-0-change-tracking.md   # Phase 0 異動採集決策 + 稽核庫 Schema
     └── design/
@@ -123,8 +130,9 @@ argus-db/
 
 ## 7. 路線圖 (Roadmap)
 
-- **Phase 0 — 底層異動追蹤與標準化中介層** ← *目前階段：文件已定案；採集管線 +
-  稽核庫已可部署 (見 [`docs/deployment.md`](./docs/deployment.md))。剩餘程式任務：
-  Standardizer 消費服務。*
-- **Phase 1 — 平台核心架構與權限中樞** (IAM / AD SSO / 多節點註冊)
+- **Phase 0 — 底層異動追蹤與標準化中介層**：文件已定案；採集管線 + 稽核庫已可部署
+  (見 [`docs/deployment.md`](./docs/deployment.md))。剩餘程式任務：Standardizer 消費服務。
+- **Phase 1 — 平台核心架構與權限中樞** (IAM / AD SSO / 多節點註冊) ← *進行中：平台 API
+  骨架 + AD Windows 驗證 (SSO + 手動登入) 已可部署於 Windows IIS，見
+  [`docs/deployment-iis.md`](./docs/deployment-iis.md)。*
 - **Phase 2 — 核心功能模組** (結構中控台 / 權限視圖 / 稽核戰情室 / 唯讀瀏覽器)

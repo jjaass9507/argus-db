@@ -1,7 +1,16 @@
 # Secrets / local config — 切勿提交真實憑證
 .env
 deploy/.env
+app/.env
 *.local
+
+# Python (平台 API)
+app/venv/
+app/.venv/
+app/logs/
+app/wheels/
+__pycache__/
+*.pyc
 
 # OS / editor
 .DS_Store

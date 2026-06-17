@@ -1,0 +1,8 @@
+fastapi
+a2wsgi
+waitress
+itsdangerous
+ldap3
+python-dotenv
+httpx
+pywin32 ; sys_platform == "win32"
