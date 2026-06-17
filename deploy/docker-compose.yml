@@ -1,0 +1,87 @@
+# =============================================================================
+# Argus-DB | Phase 0 採集管線 (Change Tracking Pipeline)
+# 啟動: PostgreSQL 稽核庫 + Kafka (KRaft) + Kafka Connect (Debezium)
+# 用法: 見 docs/deployment.md
+# =============================================================================
+name: argus-phase0
+
+services:
+  # ---------------------------------------------------------------------------
+  # 集中化稽核庫 (Central Audit Store)
+  # 初始化時自動套用 audit-store/ 內的 SQL。
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16
+    container_name: argus-audit-store
+    environment:
+      POSTGRES_USER: ${AUDIT_DB_USER:-argus}
+      POSTGRES_PASSWORD: ${AUDIT_DB_PASSWORD:?set AUDIT_DB_PASSWORD in .env}
+      POSTGRES_DB: ${AUDIT_DB_NAME:-argus_audit_db}
+    ports:
+      - "${AUDIT_DB_PORT:-5432}:5432"
+    volumes:
+      - audit_pgdata:/var/lib/postgresql/data
+      - ./audit-store:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AUDIT_DB_USER:-argus} -d ${AUDIT_DB_NAME:-argus_audit_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Kafka (single-node KRaft, 無 ZooKeeper)
+  # ---------------------------------------------------------------------------
+  kafka:
+    image: quay.io/debezium/kafka:2.7
+    container_name: argus-kafka
+    ports:
+      - "${KAFKA_PORT:-9092}:9092"
+    environment:
+      CLUSTER_ID: ${KAFKA_CLUSTER_ID:-argus-phase0-cluster}
+      KAFKA_BROKER_ID: "1"
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+    volumes:
+      - kafka_data:/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/kafka/bin/kafka-cluster.sh cluster-id --bootstrap-server localhost:9092 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # Kafka Connect + Debezium connectors (MSSQL CDC / PostgreSQL pgoutput)
+  # ---------------------------------------------------------------------------
+  connect:
+    image: quay.io/debezium/connect:2.7
+    container_name: argus-connect
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "${CONNECT_PORT:-8083}:8083"
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: argus-connect
+      CONFIG_STORAGE_TOPIC: _argus_connect_configs
+      OFFSET_STORAGE_TOPIC: _argus_connect_offsets
+      STATUS_STORAGE_TOPIC: _argus_connect_status
+      CONFIG_STORAGE_REPLICATION_FACTOR: "1"
+      OFFSET_STORAGE_REPLICATION_FACTOR: "1"
+      STATUS_STORAGE_REPLICATION_FACTOR: "1"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8083/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  audit_pgdata:
+  kafka_data:

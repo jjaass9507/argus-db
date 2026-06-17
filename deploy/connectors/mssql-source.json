@@ -1,0 +1,20 @@
+{
+  "name": "argus-src-mssql",
+  "config": {
+    "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
+    "tasks.max": "1",
+    "database.hostname": "${SRC_MSSQL_HOST}",
+    "database.port": "${SRC_MSSQL_PORT}",
+    "database.user": "${SRC_MSSQL_USER}",
+    "database.password": "${SRC_MSSQL_PASSWORD}",
+    "database.names": "${SRC_MSSQL_DBNAME}",
+    "database.encrypt": "false",
+    "topic.prefix": "argus.src.mssql01",
+    "schema.history.internal.kafka.bootstrap.servers": "kafka:9092",
+    "schema.history.internal.kafka.topic": "_argus.schemahistory.mssql01",
+    "snapshot.mode": "initial",
+    "tombstones.on.delete": "false",
+    "decimal.handling.mode": "string",
+    "_comment": "來源 DB 須先啟用 CDC (sys.sp_cdc_enable_db + 各表 sp_cdc_enable_table) 且 SQL Server Agent 運行中; user/password 部署時由 secret 注入"
+  }
+}

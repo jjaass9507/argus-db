@@ -1,0 +1,7 @@
+# Secrets / local config — 切勿提交真實憑證
+.env
+deploy/.env
+*.local
+
+# OS / editor
+.DS_Store

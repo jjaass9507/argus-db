@@ -1,0 +1,22 @@
+{
+  "name": "argus-src-postgres",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "tasks.max": "1",
+    "database.hostname": "${SRC_PG_HOST}",
+    "database.port": "${SRC_PG_PORT}",
+    "database.user": "${SRC_PG_USER}",
+    "database.password": "${SRC_PG_PASSWORD}",
+    "database.dbname": "${SRC_PG_DBNAME}",
+    "plugin.name": "pgoutput",
+    "slot.name": "argus_slot",
+    "publication.name": "argus_pub",
+    "publication.autocreate.mode": "filtered",
+    "topic.prefix": "argus.src.pg01",
+    "snapshot.mode": "initial",
+    "tombstones.on.delete": "false",
+    "decimal.handling.mode": "string",
+    "time.precision.mode": "adaptive_time_microseconds",
+    "_comment": "受稽核表須設定 REPLICA IDENTITY FULL 才能取得完整 OLD 值; user/password 部署時由 secret 注入"
+  }
+}
