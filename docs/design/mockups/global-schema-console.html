@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="zh-TW"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>全局結構中控台</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;600;700;900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed": "#caf300",
+                        "background": "#050608",
+                        "surface-container-lowest": "#0a0c10",
+                        "outline-variant": "#2a3441",
+                        "on-surface-variant": "#8b949e",
+                        "surface-container-low": "#11151a",
+                        "surface-container-high": "#1c2128",
+                        "primary": "#d4ff00",
+                        "on-surface": "#c9d1d9",
+                        "error": "#ff7b72",
+                        "secondary-fixed": "#58a6ff",
+                        "surface": "#0d1117",
+                        "surface-dim": "#050608",
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0px",
+                        "lg": "0px",
+                        "xl": "0px",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-page": "0px",
+                        "gutter": "0px",
+                        "grid-unit": "4px",
+                        "container-max": "100%"
+                    },
+                    "fontFamily": {
+                        "mono": ["Geist Mono", "monospace"],
+                        "body-md": ["Geist Mono", "monospace"],
+                        "label-caps": ["Geist Mono", "monospace"],
+                        "headline-lg": ["Geist Mono", "monospace"],
+                        "data-md": ["Geist Mono", "monospace"],
+                        "body-lg": ["Geist Mono", "monospace"],
+                        "data-lg": ["Geist Mono", "monospace"],
+                        "headline-md": ["Geist Mono", "monospace"]
+                    },
+                    "fontSize": {
+                        "body-md": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-caps": ["10px", { "lineHeight": "16px", "letterSpacing": "0.25em", "fontWeight": "700" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                        "data-md": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "body-lg": ["14px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "data-lg": ["14px", { "lineHeight": "24px", "fontWeight": "600", "letterSpacing": "0.05em" }],
+                        "headline-md": ["16px", { "lineHeight": "24px", "fontWeight": "700", "letterSpacing": "0.15em" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #050608;
+            font-family: 'Geist Mono', monospace;
+        }
+
+        /* Scanline & CRT Effects */
+        .scanlines {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.2) 50%,
+                rgba(0,0,0,0.2)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .crt-flicker {
+            animation: crt 0.15s infinite;
+            pointer-events: none;
+            opacity: 0.03;
+            background: white;
+            mix-blend-mode: overlay;
+            z-index: 99;
+        }
+
+        @keyframes crt {
+            0% { opacity: 0.02; }
+            50% { opacity: 0.05; }
+            100% { opacity: 0.02; }
+        }
+
+        /* Phantom Data Streams */
+        .phantom-stream {
+            position: absolute;
+            top: -100%;
+            width: 1px;
+            height: 200%;
+            background: linear-gradient(to bottom, transparent, rgba(212, 255, 0, 0.2), transparent);
+            animation: fall linear infinite;
+        }
+        @keyframes fall {
+            to { transform: translateY(100%); }
+        }
+
+        /* Global Grid System */
+        .global-grid {
+            background-image:
+                linear-gradient(to right, rgba(42, 52, 65, 0.2) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(42, 52, 65, 0.2) 1px, transparent 1px),
+                linear-gradient(to right, rgba(42, 52, 65, 0.5) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(42, 52, 65, 0.5) 1px, transparent 1px);
+            background-size: 16px 16px, 16px 16px, 64px 64px, 64px 64px;
+        }
+
+        /* Fragmented Terminal Layout */
+        .floating-window {
+            position: absolute;
+            background: rgba(13, 17, 23, 0.9);
+            backdrop-filter: blur(4px);
+            border: 1px solid #2a3441;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+        }
+
+        .hud-corner {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-color: #58a6ff;
+            border-style: solid;
+            border-width: 0;
+            opacity: 0.7;
+        }
+        .hud-tl { top: -1px; left: -1px; border-top-width: 1px; border-left-width: 1px; }
+        .hud-tr { top: -1px; right: -1px; border-top-width: 1px; border-right-width: 1px; }
+        .hud-bl { bottom: -1px; left: -1px; border-bottom-width: 1px; border-left-width: 1px; }
+        .hud-br { bottom: -1px; right: -1px; border-bottom-width: 1px; border-right-width: 1px; }
+
+        .glitch-text {
+            position: relative;
+        }
+        .glitch-text::before {
+            content: attr(data-text);
+            position: absolute;
+            left: -2px;
+            text-shadow: 1px 0 #58a6ff;
+            top: 0;
+            color: white;
+            background: black;
+            overflow: hidden;
+            clip: rect(0, 900px, 0, 0);
+            animation: noise-anim-2 3s infinite linear alternate-reverse;
+        }
+
+        /* SVG Markers */
+        .marker-svg {
+            width: 12px;
+            height: 12px;
+            fill: currentColor;
+        }
+
+        .sys-border { border: 1px solid #2a3441; }
+
+        /* Hardcore Triggers */
+        .trigger-btn {
+            border: 1px solid #2a3441;
+            background: transparent;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            transition: all 0.1s;
+        }
+        .trigger-btn:hover {
+            background: #d4ff00;
+            color: #000;
+            border-color: #d4ff00;
+        }
+        .trigger-btn.secondary:hover {
+            background: #58a6ff;
+            border-color: #58a6ff;
+        }
+
+        .blink { animation: blinker 1s step-end infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
+
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #050608; }
+        ::-webkit-scrollbar-thumb { background: #2a3441; }
+        ::-webkit-scrollbar-thumb:hover { background: #8b949e; }
+    </style>
+</head>
+<body class="text-on-surface font-body-md antialiased overflow-hidden uppercase h-screen w-screen relative global-grid">
+<div class="absolute inset-0 scanlines"></div>
+<div class="absolute inset-0 crt-flicker"></div>
+<!-- Background Decals -->
+<div class="absolute top-10 right-10 text-[8px] text-outline-variant opacity-30 whitespace-pre font-bold leading-none select-none z-0">
+0x7FFF5FBFF9A0
+0x7FFF5FBFF9A8
+0x7FFF5FBFF9B0
+0x7FFF5FBFF9B8
+</div>
+<div class="absolute bottom-20 left-10 text-[8px] text-outline-variant opacity-30 whitespace-pre font-bold leading-none select-none z-0 transform -rotate-90 origin-bottom-left">
+SEQ_0x9A4F_B211_ACTIVE
+</div>
+<!-- Phantom Streams -->
+<div class="phantom-stream left-[15%]" style="animation-duration: 3s; animation-delay: 0s;"></div>
+<div class="phantom-stream left-[45%]" style="animation-duration: 5s; animation-delay: 1s;"></div>
+<div class="phantom-stream left-[85%]" style="animation-duration: 4s; animation-delay: 2s;"></div>
+<!-- Main Top HUD Navigation -->
+<div class="absolute top-4 left-4 right-4 h-12 floating-window flex justify-between items-center px-4 z-40">
+<div class="hud-tl hud-corner"></div><div class="hud-tr hud-corner"></div><div class="hud-bl hud-corner"></div><div class="hud-br hud-corner"></div>
+<div class="flex items-center gap-6 h-full">
+<div class="flex items-center gap-3 pr-6 sys-border-r border-outline-variant/50 h-full">
+<svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M4 17l6-6-6-6M12 19h8"></path></svg>
+<div>
+<h1 class="font-headline-md text-headline-md text-primary m-0 leading-none glitch-text" data-text="SYS.GOV.HUB">SYS.GOV.HUB</h1>
+<p class="font-label-caps text-[8px] text-on-surface-variant m-0 leading-none mt-1.5 tracking-[0.3em]">BUILD 240.A.8</p>
+</div>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant font-label-caps text-label-caps tracking-widest">
+<span class="text-secondary-fixed opacity-70">LOC::</span>
+<span>CLUSTER-01</span>
+<span class="text-outline-variant">/</span>
+<span>PUBLIC</span>
+<span class="text-outline-variant">/</span>
+<span>TABLES</span>
+<span class="text-outline-variant">/</span>
+<span class="text-on-surface border-b border-primary/50 pb-0.5">UNIFIED_AUDIT_LOGS</span>
+</div>
+</div>
+<div class="flex items-center gap-4 h-full">
+<!-- Telemetry Module -->
+<div class="flex flex-col justify-center gap-1.5 pr-4 border-r border-outline-variant/50 h-full text-[9px] font-bold tracking-widest">
+<div class="flex items-center gap-3 justify-end">
+<span class="text-on-surface-variant">LNK_STAT</span>
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 bg-primary blink"></span>
+<span class="text-primary">CDC_ACTV</span>
+</div>
+</div>
+<div class="flex items-center gap-3 justify-end">
+<span class="text-on-surface-variant">TGT_NODE</span>
+<span class="text-on-surface">MSSQL@10.0.4.12</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="trigger-btn px-3 py-1 font-label-caps text-[9px] text-on-surface flex items-center gap-1">
+<svg class="w-3 h-3" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg>
+                    SYNC_META
+                </button>
+<button class="trigger-btn px-3 py-1 font-label-caps text-[9px] text-on-surface flex items-center gap-1">
+<svg class="w-3 h-3" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></svg>
+                    EXP_JSON
+                </button>
+</div>
+</div>
+</div>
+<!-- Left Panel: Mounted FS -->
+<div class="absolute top-20 left-4 bottom-4 w-72 floating-window flex flex-col z-30">
+<div class="hud-tl hud-corner"></div><div class="hud-tr hud-corner"></div><div class="hud-bl hud-corner"></div><div class="hud-br hud-corner"></div>
+<div class="p-2 border-b border-outline-variant/50 bg-surface-container-high/50 flex justify-between items-center">
+<span class="font-label-caps text-[10px] text-secondary-fixed tracking-[0.2em]">MOUNTED_FS</span>
+<button class="trigger-btn secondary px-1.5 py-0.5 text-[8px] flex items-center gap-1">
+<svg class="w-2 h-2" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+                MOUNT
+            </button>
+</div>
+<div class="flex-1 overflow-y-auto p-3 font-mono text-data-md">
+<div class="text-on-surface whitespace-pre leading-[1.8]">
+<div class="flex items-center text-on-surface hover:text-primary cursor-pointer">
+<span class="text-outline-variant mr-2 opacity-50">+--</span>
+<span>PROD-MSSQL-01</span>
+<span class="ml-2 text-[8px] bg-primary text-black px-1 font-bold">ACTV</span>
+</div>
+<div class="ml-1 border-l border-outline-variant/30 pl-4 my-1">
+<div class="flex items-center text-on-surface-variant hover:text-on-surface cursor-pointer">
+<span class="text-outline-variant mr-2 opacity-50">+--</span>
+<span class="text-secondary-fixed">TABLES</span>
+</div>
+<div class="ml-1 border-l border-outline-variant/30 pl-4 my-1">
+<div class="flex items-center text-primary bg-primary/5 cursor-pointer relative -left-4 pl-4 pr-2 border-l border-primary">
+<span class="text-primary mr-2 opacity-80">&gt;&gt;</span>
+<span class="font-bold">unified_audit_logs</span>
+</div>
+<div class="flex items-center text-on-surface-variant hover:text-on-surface cursor-pointer">
+<span class="text-outline-variant mr-2 opacity-50">|--</span>
+<span>user_accounts</span>
+</div>
+<div class="flex items-center text-on-surface-variant hover:text-on-surface cursor-pointer">
+<span class="text-outline-variant mr-2 opacity-50">`--</span>
+<span>transactions</span>
+</div>
+</div>
+<div class="flex items-center text-on-surface-variant hover:text-on-surface cursor-pointer">
+<span class="text-outline-variant mr-2 opacity-50">+--</span>
+<span>VIEWS</span>
+</div>
+</div>
+<div class="flex items-center text-on-surface-variant hover:text-on-surface cursor-pointer mt-2">
+<span class="text-outline-variant mr-2 opacity-50">+--</span>
+<span>STAGING-PG-01</span>
+</div>
+</div>
+</div>
+<div class="mt-auto border-t border-outline-variant/50 p-2 bg-surface-container-low/50">
+<div class="flex flex-col gap-1 text-[9px] font-mono text-on-surface-variant tracking-wider">
+<div class="flex justify-between"><span>SYS_MEM</span> <span class="text-on-surface">32/64GB</span></div>
+<div class="flex justify-between"><span>CPU_LD</span> <span class="text-on-surface">12%</span></div>
+<div class="flex justify-between"><span>UP_TM</span> <span class="text-on-surface">45D:12H</span></div>
+</div>
+</div>
+</div>
+<!-- Center Main: Schema Spec -->
+<div class="absolute top-20 left-[310px] right-[360px] bottom-1/3 floating-window flex flex-col z-20 mb-4">
+<div class="hud-tl hud-corner"></div><div class="hud-tr hud-corner"></div><div class="hud-bl hud-corner"></div><div class="hud-br hud-corner"></div>
+<div class="absolute -top-2.5 left-4 bg-background px-1 text-[9px] text-secondary-fixed font-mono border border-secondary-fixed/50 z-10">
+        DEF_HASH::9A4F_B211
+    </div>
+<div class="p-3 border-b border-outline-variant/50 bg-surface-container-high/30 flex justify-between items-center">
+<h3 class="font-data-lg text-data-lg text-on-surface flex items-center gap-2 m-0 uppercase tracking-widest">
+<svg class="w-4 h-4 text-secondary-fixed" fill="none" stroke="currentColor" viewbox="0 0 24 24"><rect height="18" rx="2" ry="2" width="18" x="3" y="3"></rect><line x1="3" x2="21" y1="9" y2="9"></line><line x1="9" x2="9" y1="21" y2="9"></line></svg>
+            TBL_DEF // UNIFIED_AUDIT_LOGS
+        </h3>
+<span class="font-label-caps text-[9px] text-error border border-error/50 px-1.5 py-0.5">READ_ONLY</span>
+</div>
+<div class="flex-1 overflow-auto p-2">
+<table class="w-full text-left border-collapse font-mono text-xs">
+<thead>
+<tr class="text-[9px] text-on-surface-variant border-b border-outline-variant/50">
+<th class="p-2 font-normal tracking-widest text-center opacity-50">IDX</th>
+<th class="p-2 font-normal tracking-widest">FIELD_NAME</th>
+<th class="p-2 font-normal tracking-widest">DATA_TYPE</th>
+<th class="p-2 font-normal tracking-widest text-center">NUL</th>
+<th class="p-2 font-normal tracking-widest">DEF_VAL</th>
+</tr>
+</thead>
+<tbody class="text-on-surface">
+<tr class="border-b border-outline-variant/20 hover:bg-surface-container-high/50 group">
+<td class="p-2 text-on-surface-variant text-center text-[10px]">00</td>
+<td class="p-2 text-on-surface font-bold tracking-wide">log_id <span class="text-primary text-[10px] ml-1">PK</span></td>
+<td class="p-2 text-secondary-fixed">BIGINT</td>
+<td class="p-2 text-center text-outline-variant">0</td>
+<td class="p-2 text-on-surface-variant">ID(1,1)</td>
+</tr>
+<tr class="border-b border-outline-variant/20 bg-primary/5 border-l-2 border-l-primary relative">
+<td class="p-2 text-primary text-center text-[10px]">&gt;01</td>
+<td class="p-2 text-primary font-bold tracking-wide">event_timestamp</td>
+<td class="p-2 text-secondary-fixed">DATETIME2</td>
+<td class="p-2 text-center text-outline-variant">0</td>
+<td class="p-2 text-on-surface-variant">GETUTCDATE()</td>
+</tr>
+<tr class="border-b border-outline-variant/20 hover:bg-surface-container-high/50">
+<td class="p-2 text-on-surface-variant text-center text-[10px]">02</td>
+<td class="p-2 text-on-surface">actor_id <span class="text-on-surface-variant text-[10px] ml-1">FK</span></td>
+<td class="p-2 text-secondary-fixed">UNIQUEIDENTIFIER</td>
+<td class="p-2 text-center text-on-surface">1</td>
+<td class="p-2 text-on-surface-variant opacity-50">NULL</td>
+</tr>
+<tr class="border-b border-outline-variant/20 hover:bg-surface-container-high/50">
+<td class="p-2 text-on-surface-variant text-center text-[10px]">03</td>
+<td class="p-2 text-on-surface">action_type</td>
+<td class="p-2 text-secondary-fixed">VARCHAR(50)</td>
+<td class="p-2 text-center text-outline-variant">0</td>
+<td class="p-2 text-on-surface-variant opacity-50">''</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Center Bottom: Index Registry -->
+<div class="absolute bottom-4 left-[310px] right-[360px] h-[calc(33%-1rem)] floating-window flex flex-col z-20">
+<div class="hud-tl hud-corner"></div><div class="hud-tr hud-corner"></div><div class="hud-bl hud-corner"></div><div class="hud-br hud-corner"></div>
+<div class="p-2 border-b border-outline-variant/50 bg-surface-container-high/30">
+<span class="font-label-caps text-[10px] text-secondary-fixed tracking-[0.2em]">INDEX_REGISTRY</span>
+</div>
+<div class="overflow-auto p-2">
+<table class="w-full text-left border-collapse font-mono text-xs">
+<thead>
+<tr class="text-[9px] text-on-surface-variant border-b border-outline-variant/50">
+<th class="p-2 font-normal tracking-widest pl-4">IDX_VECTOR</th>
+<th class="p-2 font-normal tracking-widest">COL_TARGET</th>
+<th class="p-2 font-normal tracking-widest text-center">UNQ</th>
+</tr>
+</thead>
+<tbody class="text-on-surface">
+<tr class="border-b border-outline-variant/20 hover:bg-surface-container-high/50">
+<td class="p-2 pl-4 text-on-surface font-bold">PK_unified_audit_logs</td>
+<td class="p-2 text-secondary-fixed">log_id</td>
+<td class="p-2 text-center text-on-surface">1</td>
+</tr>
+<tr class="hover:bg-surface-container-high/50">
+<td class="p-2 pl-4 text-on-surface">IX_audit_timestamp</td>
+<td class="p-2 text-secondary-fixed">event_timestamp DESC</td>
+<td class="p-2 text-center text-outline-variant">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Right Panel Top: Relation Map -->
+<div class="absolute top-20 right-4 w-[330px] bottom-1/3 floating-window flex flex-col z-30 mb-4">
+<div class="hud-tl hud-corner"></div><div class="hud-tr hud-corner"></div><div class="hud-bl hud-corner"></div><div class="hud-br hud-corner"></div>
+<div class="absolute -top-2.5 right-4 bg-background px-1 text-[9px] text-primary font-mono border border-primary/50 z-10 blink">
+        LIVE_VEC_GRAPH
+    </div>
+<div class="p-2 border-b border-outline-variant/50 bg-surface-container-high/30">
+<span class="font-label-caps text-[10px] text-secondary-fixed tracking-[0.2em]">RELATION_MAP</span>
+</div>
+<div class="flex-1 p-4 flex flex-col items-center justify-center relative overflow-hidden">
+<!-- Grid Target -->
+<div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+<svg height="200" viewbox="0 0 100 100" width="200"><circle cx="50" cy="50" fill="none" r="40" stroke="currentColor" stroke-width="0.5"></circle><circle cx="50" cy="50" fill="none" r="20" stroke="currentColor" stroke-width="0.5"></circle><line stroke="currentColor" stroke-width="0.5" x1="50" x2="50" y1="0" y2="100"></line><line stroke="currentColor" stroke-width="0.5" x1="0" x2="100" y1="50" y2="50"></line></svg>
+</div>
+<!-- Node A -->
+<div class="border border-primary bg-primary/5 px-4 py-2 z-10 w-48 text-center relative">
+<div class="absolute top-0 left-0 w-1 h-1 bg-primary"></div>
+<div class="absolute bottom-0 right-0 w-1 h-1 bg-primary"></div>
+<span class="font-mono text-xs text-primary block font-bold tracking-wider">UNIFIED_AUDIT_LOGS</span>
+<span class="text-[8px] text-primary/70 block mt-1 tracking-widest">ACTOR_ID (FK)</span>
+</div>
+<!-- Link -->
+<div class="z-10 flex flex-col items-center my-4">
+<span class="text-[8px] text-secondary-fixed px-1 border border-secondary-fixed/50 bg-background tracking-widest">REF_VEC</span>
+<div class="h-6 border-l border-secondary-fixed border-dashed my-1"></div>
+<svg class="w-3 h-3 text-secondary-fixed transform rotate-90" fill="none" stroke="currentColor" viewbox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+</div>
+<!-- Node B -->
+<div class="border border-outline-variant bg-surface-container-high px-4 py-2 z-10 w-48 text-center relative hover:border-secondary-fixed transition-colors cursor-crosshair">
+<span class="font-mono text-xs text-on-surface block tracking-wider">USER_ACCOUNTS</span>
+<span class="text-[8px] text-on-surface-variant block mt-1 tracking-widest">USER_ID (PK)</span>
+</div>
+</div>
+</div>
+<!-- Right Panel Bottom: Kernel Feed -->
+<div class="absolute bottom-4 right-4 w-[330px] h-[calc(33%-1rem)] floating-window flex flex-col z-30">
+<div class="hud-tl hud-corner"></div><div class="hud-tr hud-corner"></div><div class="hud-bl hud-corner"></div><div class="hud-br hud-corner"></div>
+<div class="p-2 border-b border-outline-variant/50 bg-surface-container-high/30 flex justify-between items-center">
+<span class="font-label-caps text-[10px] text-secondary-fixed tracking-[0.2em]">KERNEL_FEED</span>
+<span class="w-1.5 h-1.5 bg-primary blink"></span>
+</div>
+<div class="p-3 flex-1 overflow-auto font-mono text-[10px] text-on-surface-variant leading-relaxed">
+<div class="mb-0.5"><span class="text-primary opacity-50">&gt;</span> INIT_SCAN_SEQ... OK</div>
+<div class="mb-0.5"><span class="text-primary opacity-50">&gt;</span> MOUNTING: PROD-MSSQL-01</div>
+<div class="mb-0.5"><span class="text-primary opacity-50">&gt;</span> AUTH_TOKEN: <span class="text-on-surface">VALID</span></div>
+<div class="mb-0.5"><span class="text-primary opacity-50">&gt;</span> EXTRACT_SCHEMA: dbo.unified_audit_logs</div>
+<div class="mb-0.5 text-secondary-fixed pl-4">&gt;&gt; FETCH_OK (12ms) // VEC_MAPPED</div>
+<div class="mb-0.5 mt-2"><span class="text-primary opacity-50">&gt;</span> AWAITING_CMD <span class="bg-primary/50 w-2 h-3 inline-block align-middle blink"></span></div>
+</div>
+</div>
+</body></html>
