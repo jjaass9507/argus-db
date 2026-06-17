@@ -2,13 +2,16 @@
 .env
 deploy/.env
 app/.env
+standardizer/.env
 *.local
 
-# Python (平台 API)
+# Python (平台 API + Standardizer)
 app/venv/
 app/.venv/
 app/logs/
 app/wheels/
+standardizer/venv/
+standardizer/.venv/
 __pycache__/
 *.pyc
 

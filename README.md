@@ -110,13 +110,19 @@ argus-db/
 │   ├── wsgi.py  web.config        #   IIS + Waitress 部署進入點與設定
 │   ├── requirements.txt  .env.example
 │   └── tests/                     #   純函式單元測試
+├── standardizer/                  # Phase 0 Standardizer 消費服務
+│   ├── main.py                    #   aiokafka 消費入口
+│   ├── parser.py                  #   Debezium envelope 解析 (純函式)
+│   ├── db.py                      #   asyncpg 冪等寫入稽核庫
+│   ├── config.py  requirements.txt  .env.example  Dockerfile
+│   └── tests/                     #   純函式單元測試
 ├── deploy/                        # Phase 0 採集管線部署資產
 │   ├── docker-compose.yml         #   postgres + kafka + connect
 │   ├── .env.example               #   設定範例 (複製為 .env)
 │   ├── audit-store/01_schema.sql  #   稽核庫 schema (初始化自動套用)
 │   └── connectors/                #   Debezium 連接器設定 (mssql / postgres)
 └── docs/
-    ├── deployment.md              # Phase 0 採集管線部署說明 (容器)
+    ├── deployment.md              # Phase 0 採集管線 + Standardizer 部署說明
     ├── deployment-iis.md          # 平台 API 部署說明 (Windows IIS + AD)
     ├── architecture/
     │   └── phase-0-change-tracking.md   # Phase 0 異動採集決策 + 稽核庫 Schema
@@ -130,8 +136,9 @@ argus-db/
 
 ## 7. 路線圖 (Roadmap)
 
-- **Phase 0 — 底層異動追蹤與標準化中介層**：文件已定案；採集管線 + 稽核庫已可部署
-  (見 [`docs/deployment.md`](./docs/deployment.md))。剩餘程式任務：Standardizer 消費服務。
+- **Phase 0 — 底層異動追蹤與標準化中介層**：**已完成**。採集管線 (Kafka + Debezium)、
+  稽核庫 schema、Standardizer 消費服務均已可部署
+  (見 [`docs/deployment.md`](./docs/deployment.md))。
 - **Phase 1 — 平台核心架構與權限中樞** (IAM / AD SSO / 多節點註冊) ← *進行中：平台 API
   骨架 + AD Windows 驗證 (SSO + 手動登入) 已可部署於 Windows IIS，見
   [`docs/deployment-iis.md`](./docs/deployment-iis.md)。*
